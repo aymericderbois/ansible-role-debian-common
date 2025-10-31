@@ -1,0 +1,17 @@
+---
+# Liste des paquets système à installer
+debian_common_packages: [] #  ["curl", "wget", "vim", "git", "htop"]
+
+# Fuseau horaire à configurer
+debian_common_timezone: "Europe/Paris"
+
+# Active la mise à jour complète du système :
+# - true : effectue un dist-upgrade (première fois) puis safe upgrade (exécutions suivantes)
+# - false : aucune mise à jour des paquets (par défaut pour la sécurité)
+debian_common_upgrade: false
+
+# Durée de validité du cache APT en secondes (utilisé lors de apt update)
+debian_common_cache_valid_time: 3600
+
+# Fichier flag marquant qu'un dist-upgrade a été effectué
+debian_common_upgrade_flag_file: "/var/lib/ansible/dist-upgrade-completed"

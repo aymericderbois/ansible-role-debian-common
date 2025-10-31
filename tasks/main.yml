@@ -1,0 +1,65 @@
+---
+- name: Ensure APT cache is updated
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: "{{ debian_common_cache_valid_time }}"
+
+- name: Ensure dist-upgrade flag status is checked
+  ansible.builtin.stat:
+    path: "{{ debian_common_upgrade_flag_file }}"
+  register: dist_upgrade_flag
+  when: debian_common_upgrade | bool
+
+- name: Ensure parent directory for flag file exists
+  ansible.builtin.file:
+    path: "{{ debian_common_upgrade_flag_file | dirname }}"
+    state: directory
+    mode: '0755'
+  when:
+    - debian_common_upgrade | bool
+    - dist_upgrade_flag is defined
+    - not dist_upgrade_flag.stat.exists
+
+- name: Ensure dist-upgrade is performed (first run only)
+  ansible.builtin.apt:
+    upgrade: full
+    force_apt_get: true
+    autoremove: true
+    autoclean: true
+  when:
+    - debian_common_upgrade | bool
+    - dist_upgrade_flag is defined
+    - not dist_upgrade_flag.stat.exists
+  register: dist_upgrade_result
+
+- name: Ensure dist-upgrade flag file is created
+  ansible.builtin.copy:
+    content: "{{ ansible_date_time.iso8601 }}\n"
+    dest: "{{ debian_common_upgrade_flag_file }}"
+    mode: '0644'
+    force: false
+  when:
+    - debian_common_upgrade | bool
+    - dist_upgrade_flag is defined
+    - not dist_upgrade_flag.stat.exists
+
+- name: Ensure safe upgrade is performed (subsequent runs)
+  ansible.builtin.apt:
+    upgrade: safe
+    force_apt_get: true
+    autoremove: true
+    autoclean: true
+  when:
+    - debian_common_upgrade | bool
+    - dist_upgrade_flag is defined
+    - dist_upgrade_flag.stat.exists
+
+- name: Ensure base system packages are installed
+  ansible.builtin.apt:
+    name: "{{ debian_common_packages }}"
+    state: present
+  when: debian_common_packages | length > 0
+
+- name: Ensure timezone is configured
+  ansible.builtin.timezone:
+    name: "{{ debian_common_timezone }}"

@@ -1,0 +1,17 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+
+  vars:
+    debian_common_packages:
+      - curl
+      - wget
+      - vim
+    debian_common_timezone: "Europe/Paris"
+    debian_common_upgrade: false
+
+  tasks:
+    - name: Include role
+      ansible.builtin.include_role:
+        name: ansible-role-debian-common

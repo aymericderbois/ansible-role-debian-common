@@ -1,0 +1,53 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Check APT cache update
+      ansible.builtin.stat:
+        path: /var/lib/apt/lists
+      register: apt_cache
+
+    - name: Assert APT cache directory exists
+      ansible.builtin.assert:
+        that:
+          - apt_cache.stat.exists
+          - apt_cache.stat.isdir
+        fail_msg: "APT cache directory does not exist"
+        success_msg: "APT cache directory exists"
+
+    - name: Check timezone configuration
+      ansible.builtin.stat:
+        path: /etc/localtime
+      register: timezone_link
+
+    - name: Assert timezone link exists
+      ansible.builtin.assert:
+        that:
+          - timezone_link.stat.exists
+          - timezone_link.stat.islnk
+        fail_msg: "Timezone is not configured"
+        success_msg: "Timezone is configured"
+
+    - name: Read timezone configuration
+      ansible.builtin.command:
+        cmd: cat /etc/timezone
+      register: timezone_file
+      changed_when: false
+
+    - name: Display configured timezone
+      ansible.builtin.debug:
+        msg: "Configured timezone: {{ timezone_file.stdout }}"
+
+    - name: Check dist-upgrade flag file
+      ansible.builtin.stat:
+        path: /var/lib/ansible/dist-upgrade-completed
+      register: upgrade_flag
+
+    - name: Assert dist-upgrade flag does not exist when upgrade is disabled
+      ansible.builtin.assert:
+        that:
+          - not upgrade_flag.stat.exists
+        fail_msg: "Dist-upgrade flag file should not exist when debian_common_upgrade is false"
+        success_msg: "Dist-upgrade flag file correctly absent"
