@@ -61,5 +61,5 @@
   when: debian_common_packages | length > 0
 
 - name: Ensure timezone is configured
-  ansible.builtin.timezone:
+  community.general.timezone:
     name: "{{ debian_common_timezone }}"
